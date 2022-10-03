@@ -1,0 +1,5 @@
+{
+  "name": "wasangeles-times",
+  "region": "us-west-1",
+  "main": "stacks/index.js"
+}
