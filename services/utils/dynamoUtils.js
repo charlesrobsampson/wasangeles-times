@@ -8,7 +8,7 @@ export async function getReading(reading) {
 		TableName: process.env.avyTableName,
 			Key: {
 				day: _.get(reading, 'day'),
-				time: _.get(reading, 'sk')
+				sk: _.get(reading, 'sk')
 			}
 	};
 	const results = await dynamoDb.get(params).promise();

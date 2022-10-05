@@ -1,0 +1,1 @@
+[{"bundle":{"format":"esm"},"handler":"functions/dash.main","runtime":"nodejs16.x","srcPath":"services"},{"bundle":{"format":"esm"},"handler":"functions/getAvyForecast.main","runtime":"nodejs16.x","srcPath":"services"}]

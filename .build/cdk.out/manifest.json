@@ -1,0 +1,217 @@
+{
+  "version": "20.0.0",
+  "artifacts": {
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "charley-wasangeles-times-stack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "charley-wasangeles-times-stack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "charley-wasangeles-times-stack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://677754610295/us-west-1",
+      "properties": {
+        "templateFile": "charley-wasangeles-times-stack.template.json",
+        "tags": {
+          "sst:app": "wasangeles-times",
+          "sst:stage": "charley"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::677754610295:role/cdk-hnb659fds-deploy-role-677754610295-us-west-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::677754610295:role/cdk-hnb659fds-cfn-exec-role-677754610295-us-west-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-677754610295-us-west-1/0320fa4989eca1583ee8e038a9d2f0dfe996eeea612e3f18fc9346587c811e1e.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "charley-wasangeles-times-stack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::677754610295:role/cdk-hnb659fds-lookup-role-677754610295-us-west-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "charley-wasangeles-times-stack.assets"
+      ],
+      "metadata": {
+        "/charley-wasangeles-times-stack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "sst:app",
+                "Value": "wasangeles-times"
+              },
+              {
+                "Key": "sst:stage",
+                "Value": "charley"
+              }
+            ]
+          }
+        ],
+        "/charley-wasangeles-times-stack/CustomResourceHandler/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomResourceHandlerServiceRole41AEC181"
+          }
+        ],
+        "/charley-wasangeles-times-stack/CustomResourceHandler/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomResourceHandlerServiceRoleDefaultPolicy73F93F56"
+          }
+        ],
+        "/charley-wasangeles-times-stack/CustomResourceHandler/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomResourceHandlerE8FB56BA"
+          }
+        ],
+        "/charley-wasangeles-times-stack/StackMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StackMetadata"
+          }
+        ],
+        "/charley-wasangeles-times-stack/avy/Table": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "avyTable901CDBCF"
+            }
+          }
+        ],
+        "/charley-wasangeles-times-stack/avy/Table/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "avyTable901CDBCF"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Api/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashApi3C2B8D69"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Api/DefaultStage/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashApiDefaultStage8FAD2F72"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/LogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashLogGroup9A794A76"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Lambda_GET_--/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashLambdaGETServiceRole7CAFE74B"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Lambda_GET_--/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashLambdaGETServiceRoleDefaultPolicy6584F296"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Lambda_GET_--/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashLambdaGET97CAC6A8"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Lambda_GET_--/EventInvokeConfig/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashLambdaGETEventInvokeConfig87B7A23A"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Route_GET_--/Integration_GET_--/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashRouteGETIntegrationGET9E67B19E"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Route_GET_--/Integration_GET_---Permission": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashRouteGETIntegrationGETPermission6A5E1998"
+          }
+        ],
+        "/charley-wasangeles-times-stack/dash/Route_GET_--/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "dashRouteGET4A92353D"
+          }
+        ],
+        "/charley-wasangeles-times-stack/getAvyForecast/Rule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "getAvyForecastRule9711D33B"
+          }
+        ],
+        "/charley-wasangeles-times-stack/getAvyForecast/Rule/AllowEventRulecharleywasangelestimesstackgetAvyForecastJobBBCBE5DD": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "getAvyForecastRuleAllowEventRulecharleywasangelestimesstackgetAvyForecastJobBBCBE5DDAD3827D5"
+          }
+        ],
+        "/charley-wasangeles-times-stack/getAvyForecast/Job/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "getAvyForecastJobServiceRole736F0418"
+          }
+        ],
+        "/charley-wasangeles-times-stack/getAvyForecast/Job/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "getAvyForecastJobServiceRoleDefaultPolicy814323A6"
+          }
+        ],
+        "/charley-wasangeles-times-stack/getAvyForecast/Job/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "getAvyForecastJob93DC57C0"
+          }
+        ],
+        "/charley-wasangeles-times-stack/getAvyForecast/Job/EventInvokeConfig/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "getAvyForecastJobEventInvokeConfigDD135CE7"
+          }
+        ],
+        "/charley-wasangeles-times-stack/ApiEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiEndpoint"
+          }
+        ],
+        "/charley-wasangeles-times-stack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/charley-wasangeles-times-stack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "charley-wasangeles-times-stack"
+    }
+  }
+}
