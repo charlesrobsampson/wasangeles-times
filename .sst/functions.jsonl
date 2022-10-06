@@ -1,2 +1,2 @@
-{"id":"charley-wasangeles-times-stack-dash-Lambda_GET_-","handler":"functions/dash.main","runtime":"nodejs16.x","srcPath":"services","bundle":{"format":"esm"},"root":"/data/data/com.termux/files/home/projects/wasangeles-times"}
-{"id":"charley-wasangeles-times-stack-getAvyForecast-Job","handler":"functions/getAvyForecast.main","runtime":"nodejs16.x","srcPath":"services","bundle":{"format":"esm"},"root":"/data/data/com.termux/files/home/projects/wasangeles-times"}
+{"id":"charley-wasangeles-times-stack-dash-Lambda_GET_-","handler":"functions/dash.main","runtime":"nodejs16.x","srcPath":"services","bundle":{"format":"esm"},"root":"/Users/csampson/Documents/personal/wasangeles-times"}
+{"id":"charley-wasangeles-times-stack-getAvyForecast-Job","handler":"functions/getAvyForecast.main","runtime":"nodejs16.x","srcPath":"services","bundle":{"format":"esm"},"root":"/Users/csampson/Documents/personal/wasangeles-times"}
