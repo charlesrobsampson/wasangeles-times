@@ -1,6 +1,7 @@
+// API DOCS
+// https://www.weather.gov/documentation/services-web-api#/default/station_observation_list
 const axios = require('axios');
 const _ = require('lodash');
-
 const url = 'https://api.weather.gov'
 
 const skiResorts = [
@@ -27,6 +28,7 @@ const minEleft = 7000;
 const mtoft = 3.28084;
 
 async function getStations() {
+	let slcStations = [];
 	try {
 	const res = await axios.get(`${url}/stations?state=UT`);
 		console.log('---RES---')
@@ -43,13 +45,15 @@ async function getStations() {
 			const ele = Math.floor(_.get(s, 'properties.elevation.value') * mtoft);
 			const lonlat = _.get(s, 'geometry.coordinates');
 			const latlon = _.reverse(lonlat);
-			if (inside(latlon, saltLakeBox) && ele >= minEleft) {
+			if ((inside(latlon, saltLakeBox) || inside(lonlat, saltLakeBox)) && ele >= minEleft || includesString(name, skiResorts)) {
 			// if (includesString(name, skiResorts) || ele >= minEleft) {
+				slcStations.push(id);
 				console.log(`${name} | ${id} | elevation: ${ele} | ${latlon}`);
 				ct++;
 			}
 		});
 		console.log('TOTAL: ', ct);
+		console.log(slcStations);
 	} catch (e) {
 		console.log('---ERROR---');
 		console.dir(e, { depth: null });

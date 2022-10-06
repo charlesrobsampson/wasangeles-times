@@ -1,3 +1,5 @@
+// API DOCS
+// https://utahavalanchecenter.org/docs/api/forecast
 import handler from './lambda';
 import axios from 'axios';
 import { getReading, saveReading } from '../utils/dynamoUtils';
