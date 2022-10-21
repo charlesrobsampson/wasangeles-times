@@ -1,3 +1,4 @@
+import secrets from './secrets';
 import { stack } from './stack';
 import { App } from '@serverless-stack/resources';
 // import * as dotenv from 'dotenv';
@@ -15,5 +16,6 @@ export default function (app) {
       format: 'esm',
     },
   });
+  app.stack(secrets);
   app.stack(stack);
 }

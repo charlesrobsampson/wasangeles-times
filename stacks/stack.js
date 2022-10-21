@@ -2,9 +2,14 @@ import {
   Api,
   Table,
   Cron,
+  use,
 } from '@serverless-stack/resources';
+import secrets from "./secrets";
 
 export function stack({ stack }) {
+  const {
+    OBSERVATION_TOKEN
+  } = use(secrets);
   const avy = new Table(stack, 'avy', {
     fields: {
       day: 'string',
@@ -21,7 +26,12 @@ export function stack({ stack }) {
 				function: {
 					handler: 'functions/dash.main',
 					permissions: [avy],
-					environment: { avyTableName: avy.tableName }
+          config: [
+            OBSERVATION_TOKEN
+          ],
+					environment: {
+            avyTableName: avy.tableName
+           }
 				}
 			}
 		}
