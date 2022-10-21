@@ -108,10 +108,6 @@ function formatPast(data) {
     delete reads[sensorToName.date_time];
     for (let i = 0; i < times.length; i++) {
       _.forEach(reads, (readings, name) => {
-        console.log({
-          name,
-          readings
-        });
         const unit = _.get(units, nameToSensor[name]);
         _.set(stationReadings, `${times[i]}.${nameToSensor[name]}`, { value: readings[i] });
         if (unit) {
