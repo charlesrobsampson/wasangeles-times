@@ -37,6 +37,11 @@ const desiredFields = [
 ];
 
 export const main = handler(async (event, context) => {
+  // Get stations for each region
+  // get time this was last run
+  // get readings for each region from the last time run to now
+  // save readings to db
+  // update last run time
   await getObservations('PSUU1', '2022-10-13T00:00:00-06:00', '2022-10-13T23:59:59-06:00');
 });
 
@@ -162,8 +167,14 @@ function formatPast(data) {
 				_.forEach(val, ({total, ct}, type) => {
 					const x = _.get(total, 'x', 0) / ct;
 					const y = _.get(total, 'y', 0) / ct;
-					const deg = (Math.atan(y / x) / (Math.PI / 180)).toFixed(2);
-					_.set(avgs, `${snsr}.${type}.value`, _.toNumber(deg));
+					let deg = _.toNumber((Math.atan(y / x) / (Math.PI / 180)).toFixed(2));
+          if (deg < 0) {
+            deg += 360;
+          }
+          if (deg >= 360) {
+            deg -= 360;
+          }
+					_.set(avgs, `${snsr}.${type}.value`, _.toNumber(deg.toFixed(2)));
 					_.set(avgs, `${snsr}.${type}.wind_cardinal_direction.value`, utils.toCardinal(deg));
 				});
 			} else {

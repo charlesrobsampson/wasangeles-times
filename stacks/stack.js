@@ -20,17 +20,31 @@ export function stack({ stack }) {
       sortKey: 'sk'
     },
   });
+  const stations = new Table(stack, 'stations', {
+    fields: {
+      region: 'string',
+      stationId: 'string'
+    },
+    primaryIndex: {
+      partitionKey: 'region',
+      sortKey: 'stationId'
+    },
+  });
   const dash = new Api(stack, 'dash', {
     routes: {
       'GET /': {
 				function: {
 					handler: 'functions/dash.main',
-					permissions: [avy],
+					permissions: [
+            avy,
+            stations
+          ],
           config: [
             OBSERVATION_TOKEN
           ],
 					environment: {
-            avyTableName: avy.tableName
+            avyTableName: avy.tableName,
+            stationsTableName: stations.tableName
            }
 				}
 			}
@@ -48,6 +62,18 @@ export function stack({ stack }) {
       }
     },
     enabled: false
+  });
+  new Cron(stack, "updateWeatherStations", {
+    // schedule: "rate(1 minute)", // for testing
+		schedule: 'cron(0 0 ? 10-6 SUN *)',// every Sunday at midnight utc oct - june
+    job: {
+      function: {
+        handler: "functions/updateWeatherStations.main",
+        permissions: [stations],
+        environment: { stationsTableName: stations.tableName }
+      }
+    },
+    enabled: true
   });
 
   stack.addOutputs({

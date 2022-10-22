@@ -7,6 +7,7 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 import Promise from 'bluebird';
 
+// const regions = ['logan', 'ogden', 'uintas', 'salt-lake', 'provo', 'skyline', 'moab', 'abajos', 'southwest'];
 const regions = ['salt-lake'];
 const tz = 'America/Denver';
 
