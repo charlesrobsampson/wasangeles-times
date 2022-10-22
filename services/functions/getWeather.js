@@ -106,15 +106,57 @@ function formatPast(data) {
     const { nameToSensor, sensorToName} = createNametoSensorMap(sensors);
     const times = _.get(reads, sensorToName.date_time);
     delete reads[sensorToName.date_time];
+		const from = moment(_.first(times)).unix();
+		const to = moment(_.last(times)).unix();
+		const diffSecs = to - from;
+		let totals = {};
     for (let i = 0; i < times.length; i++) {
       _.forEach(reads, (readings, name) => {
-        const unit = _.get(units, nameToSensor[name]);
-        _.set(stationReadings, `${times[i]}.${nameToSensor[name]}`, { value: readings[i] });
+				const snsr = nameToSensor[name];
+        const unit = _.get(units, snsr);
+				const t = times[i];
+				let ct = _.get(totals, `${snsr}.ct`, 0);
+				let total = _.get(totals, `${snsr}.total`, 0);
+				const value = readings[i];
+				if (_.isNumber(value)) {
+					ct++;
+					if (snsr === 'wind_direction') {
+						let totalx = _.get(totals, `${snsr}.total.x`, 0);
+						let totaly = _.get(totals, `${snsr}.total.y`, 0);
+						const wspeed = _.get(reads, `${sensorToName['wind_speed']}[${i}]`);
+						const x = wspeed * Math.cos(value * (Math.PI / 180));
+						const y = wspeed * Math.sin(value * (Math.PI / 180));
+						totalx += x;
+						totaly += y;
+						_.set(totals, `${snsr}.total.x`, totalx);
+						_.set(totals, `${snsr}.total.y`, totaly);
+					} else {
+						total += value;
+						_.set(totals, `${snsr}.total`, total);
+					}
+					_.set(totals, `${snsr}.ct`, ct);
+				}
+        _.set(stationReadings, `${t}.${snsr}.value`, value);
         if (unit) {
-          _.set(stationReadings, `${times[i]}.${nameToSensor[name]}.unit`, unit);
+          _.set(stationReadings, `${t}.${snsr}.unit`, unit);
         }
       });
     }
+		let avgs = {};
+		_.forEach(totals, ({total, ct}, snsr) => {
+			if (snsr === 'wind_direction') {
+				const x = _.get(total, 'x', 0) / ct;
+				const y = _.get(total, 'y', 0) / ct;
+				const deg = (Math.atan(y / x) / (Math.PI /     180)).toFixed(2);
+				_.set(avgs, `${snsr}.value`, deg);
+				_.set(avgs, 'wind_cardinal_direction.value', utils.toCardinal(deg));
+			} else {
+				_.set(avgs, `${snsr}.value`, (total / ct).toFixed(2));
+			}
+			_.set(avgs, `${snsr}.unit`, units[snsr]);
+		});
+		_.set(avgs, 'last.duration', diffSecs);
+		_.set(avgs, 'last.unit', 'seconds');
     formattedPast[stationId] = {
       name: stationName,
       id: stationId,
@@ -122,7 +164,8 @@ function formatPast(data) {
       longitude,
       elevation,
       timezone,
-      readings: stationReadings
+      readings: stationReadings,
+			averages: avgs
     };
   });
   return formattedPast;
