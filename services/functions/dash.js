@@ -20,7 +20,7 @@ export const main = handler(async (event, context) => {
 	// console.log('---TIME ZONE---\n', moment.tz.guess());
 	await getObservations({
 		key: 'stid',
-		value: 'ATB,ALT'
+		value: 'ATB'
 		// key: 'bbox',
 		// value: '-111.891109,40.464872,-111.461973,40.815298'
 		// [lonmin,latmin,lonmax,latmax]

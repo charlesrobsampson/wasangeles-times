@@ -94,9 +94,11 @@ function formatPast(data) {
   const units = _.get(data, 'UNITS');
   const stations = _.get(data, 'STATION');
   _.forEach(stations, (station) => {
+		const statUnits = _.get(station, 'UNITS');
     const reads = _.get(station, 'OBSERVATIONS');
     const timezone = _.get(station, 'TIMEZONE');
     const elevation = _.get(station, 'ELEVATION');
+		const eUnit = _.get(statUnits, 'elevation');
     const stationName = _.get(station, 'NAME');
     const stationId = _.get(station, 'STID');
     const sensors = _.get(station, 'SENSOR_VARIABLES');
@@ -115,26 +117,38 @@ function formatPast(data) {
 				const snsr = nameToSensor[name];
         const unit = _.get(units, snsr);
 				const t = times[i];
-				let ct = _.get(totals, `${snsr}.ct`, 0);
 				let total = _.get(totals, `${snsr}.total`, 0);
 				const value = readings[i];
 				if (_.isNumber(value)) {
-					ct++;
 					if (snsr === 'wind_direction') {
-						let totalx = _.get(totals, `${snsr}.total.x`, 0);
-						let totaly = _.get(totals, `${snsr}.total.y`, 0);
+						let ctw = _.get(totals, `${snsr}.wind_speed.ct`, 0) + 1;
+						let ctg = _.get(totals, `${snsr}.wind_gust.ct`, 0) + 1;
+						let totalxs = _.get(totals, `${snsr}.wind_speed.total.x`, 0);
+						let totalys = _.get(totals, `${snsr}.wind_speed.total.y`, 0);
+						let totalxg = _.get(totals, `${snsr}.wind_gust.total.x`, 0);
+						let totalyg = _.get(totals, `${snsr}.wind_gust.total.y`, 0);
 						const wspeed = _.get(reads, `${sensorToName['wind_speed']}[${i}]`);
-						const x = wspeed * Math.cos(value * (Math.PI / 180));
-						const y = wspeed * Math.sin(value * (Math.PI / 180));
-						totalx += x;
-						totaly += y;
-						_.set(totals, `${snsr}.total.x`, totalx);
-						_.set(totals, `${snsr}.total.y`, totaly);
+						const wgust = _.get(reads, `${sensorToName['wind_gust']}[${i}]`);
+						const xs = wspeed * Math.cos(value * (Math.PI / 180));
+						const ys = wspeed * Math.sin(value * (Math.PI / 180));
+						totalxs += xs;
+						totalys += ys;
+						_.set(totals, `${snsr}.wind_speed.total.x`, totalxs);
+						_.set(totals, `${snsr}.wind_speed.total.y`, totalys);
+						_.set(totals, `${snsr}.wind_speed.ct`, ctw);
+						const xg = wgust * Math.cos(value * (Math.PI / 180));
+						const yg = wgust * Math.sin(value * (Math.PI / 180));
+						totalxg += xg;
+						totalyg += yg;
+						_.set(totals, `${snsr}.wind_gust.total.x`, totalxg);
+						_.set(totals, `${snsr}.wind_gust.total.y`, totalyg);
+						_.set(totals, `${snsr}.wind_gust.ct`, ctg);
 					} else {
+						let ct = _.get(totals, `${snsr}.ct`, 0) + 1;
 						total += value;
 						_.set(totals, `${snsr}.total`, total);
+						_.set(totals, `${snsr}.ct`, ct);
 					}
-					_.set(totals, `${snsr}.ct`, ct);
 				}
         _.set(stationReadings, `${t}.${snsr}.value`, value);
         if (unit) {
@@ -143,15 +157,18 @@ function formatPast(data) {
       });
     }
 		let avgs = {};
-		_.forEach(totals, ({total, ct}, snsr) => {
+		_.forEach(totals, (val, snsr) => {
 			if (snsr === 'wind_direction') {
-				const x = _.get(total, 'x', 0) / ct;
-				const y = _.get(total, 'y', 0) / ct;
-				const deg = (Math.atan(y / x) / (Math.PI /     180)).toFixed(2);
-				_.set(avgs, `${snsr}.value`, deg);
-				_.set(avgs, 'wind_cardinal_direction.value', utils.toCardinal(deg));
+				_.forEach(val, ({total, ct}, type) => {
+					const x = _.get(total, 'x', 0) / ct;
+					const y = _.get(total, 'y', 0) / ct;
+					const deg = (Math.atan(y / x) / (Math.PI / 180)).toFixed(2);
+					_.set(avgs, `${snsr}.${type}.value`, _.toNumber(deg));
+					_.set(avgs, `${snsr}.${type}.wind_cardinal_direction.value`, utils.toCardinal(deg));
+				});
 			} else {
-				_.set(avgs, `${snsr}.value`, (total / ct).toFixed(2));
+				const { total, ct } = val;
+				_.set(avgs, `${snsr}.value`, _.toNumber((total / ct).toFixed(2)));
 			}
 			_.set(avgs, `${snsr}.unit`, units[snsr]);
 		});
@@ -162,7 +179,10 @@ function formatPast(data) {
       id: stationId,
       latitude,
       longitude,
-      elevation,
+      elevation: {
+				value: elevation,
+				units: eUnit
+			},
       timezone,
       readings: stationReadings,
 			averages: avgs
