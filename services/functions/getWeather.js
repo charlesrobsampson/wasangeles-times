@@ -45,19 +45,20 @@ export const main = handler(async (event, context) => {
   // get readings for each region from the last time run to now
   // save readings to db
   // update last run time
-  await getObservations('PSUU1', '2022-10-13T00:00:00-06:00', '2022-10-13T23:59:59-06:00');
+  // await getObservations('PSUU1', '2022-10-13T00:00:00-06:00', '2022-10-13T23:59:59-06:00');
+  await getWeather();
 });
 
 export async function getWeather() {
 	const stations = _.get(await dynamoDb.scan({
 		TableName: process.env.stationsTableName
 	}).promise(), 'Items');
-	console.log('---stations---');
-	console.dir(stations, { depth: null });
+	// console.log('---stations---');
+	// console.dir(stations, { depth: null });
 	const stationIds = _.map(stations, (station) => {
 		return _.get(station, 'stationId');
 	});
-	console.log('---ids---\n', stationIds);
+	// console.log('---ids---\n', stationIds);
 	const now = moment.utc().unix();
 	const current = moment.utc(now * 1000).format('YYYYMMDDHHmm');
 	const lastUpdated = _.get(await dynamoDb.get({
@@ -66,17 +67,62 @@ export async function getWeather() {
 			day: 'last',
 			sk: 'updated'
 		}
-	}).promise(), 'Item', moment.utc((now - (2 * 60 * 60)) * 1000).format('YYYYMMDDHHmm'));
+	}).promise(), 'Item.timestamp', moment.utc((now - (2 * 60 * 60)) * 1000).format('YYYYMMDDHHmm'));
 
 	console.log('last updated\n', lastUpdated);
 	// look at the units for REY. there are some weird things
 	// also check out the avg wind direction. as singe wnw returned a ese avg
 
-	await getObservations({
+	const observations = await getObservations({
 		key: 'stid',
-		value: 'REY'//stationIds.join(',')
+		value: stationIds.join(',')
 	}, lastUpdated, current);
 	console.log('---new last updated---\n', current);
+  await Promise.map(stations, async (station) => {
+    const id = _.get( station, 'stationId');
+    const region = _.get(station, 'region');
+    const observation = _.get(observations, id);
+    const readings = _.get(observation, 'readings');
+    const times = _.keys(readings);
+    await Promise.map(times, async (time) => {
+      const reading = _.get(readings, time);
+      const hrmin = moment.utc(time).format('HH:mm');
+      // console.log({
+      //   TableName: process.env.readingsTableName,
+      //   Item: {
+      //     day: moment.utc(time).format('YYYY-MM-DD'),
+      //     sk: `${region}#${hrmin}`,
+      //     station: id,
+      //     timestamp: time,
+      //     reading
+      //   }
+      //   // region,
+      //   // id,
+      //   // time,
+      //   // day: moment.utc(time).format('YYYY-MM-DD'),
+      //   // minute: moment.utc(time).format('HH:mm'),
+      //   // reading
+      // });
+      await dynamoDb.put({
+        TableName: process.env.readingsTableName,
+        Item: {
+          day: moment.utc(time).format('YYYY-MM-DD'),
+          sk: `${region}#${hrmin}`,
+          station: id,
+          timestamp: time,
+          reading
+        }
+      }).promise();
+    }, { concurrency: 10 });
+  }, { concurrency: 10 });
+  await dynamoDb.put({
+    TableName: process.env.readingsTableName,
+    Item: {
+      day: 'last',
+      sk: 'updated',
+      timestamp: moment.utc((now - (1 * 60 * 60)) * 1000).format('YYYYMMDDHHmm')
+    }
+  }).promise();
 }
 
 export async function getObservations(stations, start, end) {
@@ -109,12 +155,12 @@ export async function getObservations(stations, start, end) {
 	const url = `${baseUrl}${utils.makeQueryString(params)}`;
   console.log('---URL---\n', url);
   const res = await axios.get(url);
-  console.log('---observations---');
-  console.dir(res.data, { depth: null });
+  // console.log('---observations---');
+  // console.dir(res.data, { depth: null });
   let observations = _.get(res, 'data');
   let formattedPast = formatPast(observations);
-  console.log('---FORMATTED PAST---');
-  console.dir(formattedPast, { depth: null });
+  // console.log('---FORMATTED PAST---');
+  // console.dir(formattedPast, { depth: null });
   // let observations = _.get(res, 'data.features');
   // const stationData = {};
   // _.set(stationData, 'coordinates', _.get(observations, '[0].geometry.coordinates'));
@@ -126,6 +172,7 @@ export async function getObservations(stations, start, end) {
   // });
   // console.log('---ENV VARS---');
   // console.dir(Config.OBSERVATION_TOKEN, { depth: null });
+  return formattedPast;
 }
 
 function formatPast(data) {
@@ -195,30 +242,31 @@ function formatPast(data) {
         }
       });
     }
+    // move averages to the endpoint that returns observations for the app
 		let avgs = {};
-		_.forEach(totals, (val, snsr) => {
-			if (snsr === 'wind_direction') {
-				_.forEach(val, ({total, ct}, type) => {
-					const x = _.get(total, 'x', 0) / ct;
-					const y = _.get(total, 'y', 0) / ct;
-					let deg = _.toNumber((Math.atan(y / x) / (Math.PI / 180)).toFixed(2));
-          if (deg < 0) {
-            deg += 360;
-          }
-          if (deg >= 360) {
-            deg -= 360;
-          }
-					_.set(avgs, `${snsr}.${type}.value`, _.toNumber(deg.toFixed(2)));
-					_.set(avgs, `${snsr}.${type}.wind_cardinal_direction.value`, utils.toCardinal(deg));
-				});
-			} else {
-				const { total, ct } = val;
-				_.set(avgs, `${snsr}.value`, _.toNumber((total / ct).toFixed(2)));
-			}
-			_.set(avgs, `${snsr}.unit`, units[snsr]);
-		});
-		_.set(avgs, 'last.duration', diffSecs);
-		_.set(avgs, 'last.unit', 'seconds');
+		// _.forEach(totals, (val, snsr) => {
+		// 	if (snsr === 'wind_direction') {
+		// 		_.forEach(val, ({total, ct}, type) => {
+		// 			const x = _.get(total, 'x', 0) / ct;
+		// 			const y = _.get(total, 'y', 0) / ct;
+		// 			let deg = _.toNumber((Math.atan(y / x) / (Math.PI / 180)).toFixed(2));
+    //       if (deg < 0) {
+    //         deg += 360;
+    //       }
+    //       if (deg >= 360) {
+    //         deg -= 360;
+    //       }
+		// 			_.set(avgs, `${snsr}.${type}.value`, _.toNumber(deg.toFixed(2)));
+		// 			_.set(avgs, `${snsr}.${type}.wind_cardinal_direction.value`, utils.toCardinal(deg));
+		// 		});
+		// 	} else {
+		// 		const { total, ct } = val;
+		// 		_.set(avgs, `${snsr}.value`, _.toNumber((total / ct).toFixed(2)));
+		// 	}
+		// 	_.set(avgs, `${snsr}.unit`, units[snsr]);
+		// });
+		// _.set(avgs, 'last.duration', diffSecs);
+		// _.set(avgs, 'last.unit', 'seconds');
     formattedPast[stationId] = {
       name: stationName,
       id: stationId,
@@ -229,8 +277,8 @@ function formatPast(data) {
 				units: eUnit
 			},
       timezone,
-      readings: stationReadings,
-			averages: avgs
+      readings: stationReadings
+			// averages: avgs
     };
   });
   return formattedPast;

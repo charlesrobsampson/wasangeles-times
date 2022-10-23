@@ -105,7 +105,7 @@ export function stack({ stack }) {
 				}
 			}
 		},
-		enabled: false
+		enabled: true
 	});
 
   stack.addOutputs({
