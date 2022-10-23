@@ -30,6 +30,16 @@ export function stack({ stack }) {
       sortKey: 'stationId'
     },
   });
+	const readings = new Table(stack, 'readings', {
+		fields: {
+			day: 'string',
+			sk: 'string'
+		},
+		primaryIndex: {
+			partitionKey: 'day',
+			sortKey: 'sk'
+		},
+	});
   const dash = new Api(stack, 'dash', {
     routes: {
       'GET /': {
@@ -37,15 +47,17 @@ export function stack({ stack }) {
 					handler: 'functions/dash.main',
 					permissions: [
             avy,
-            stations
+            stations,
+						readings
           ],
           config: [
             OBSERVATION_TOKEN
           ],
 					environment: {
             avyTableName: avy.tableName,
-            stationsTableName: stations.tableName
-           }
+            stationsTableName: stations.tableName,
+						readingsTableName: readings.tableName
+					}
 				}
 			}
 		}
@@ -75,6 +87,26 @@ export function stack({ stack }) {
     },
     enabled: true
   });
+	new Cron(stack, "getWeather", {
+		schedule: 'cron(3 10-4 * 10-6 ? *)',// every hour during day mst
+		job: {
+			function: {
+				handler: "functions/getWeather.main",
+				permissions: [
+					stations,
+					readings
+				],
+				config: [
+					OBSERVATION_TOKEN
+				],
+				environment: {
+					stationsTableName: stations.tableName,
+					readingsTableName: readings.tableName
+				}
+			}
+		},
+		enabled: false
+	});
 
   stack.addOutputs({
     ApiEndpoint: dash.url,

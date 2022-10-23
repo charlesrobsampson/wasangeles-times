@@ -10,6 +10,9 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 import Promise from 'bluebird';
 import * as utils from '../utils/utils';
+import { DynamoDB } from "aws-sdk";
+
+const dynamoDb = new DynamoDB.DocumentClient();
 
 const slcStations = [
   'PC064', 'COOPATAU1', 'ATB',
@@ -45,7 +48,38 @@ export const main = handler(async (event, context) => {
   await getObservations('PSUU1', '2022-10-13T00:00:00-06:00', '2022-10-13T23:59:59-06:00');
 });
 
-export async function getObservations(station, start, end) {
+export async function getWeather() {
+	const stations = _.get(await dynamoDb.scan({
+		TableName: process.env.stationsTableName
+	}).promise(), 'Items');
+	console.log('---stations---');
+	console.dir(stations, { depth: null });
+	const stationIds = _.map(stations, (station) => {
+		return _.get(station, 'stationId');
+	});
+	console.log('---ids---\n', stationIds);
+	const now = moment.utc().unix();
+	const current = moment.utc(now * 1000).format('YYYYMMDDHHmm');
+	const lastUpdated = _.get(await dynamoDb.get({
+		TableName: process.env.readingsTableName,
+		Key: {
+			day: 'last',
+			sk: 'updated'
+		}
+	}).promise(), 'Item', moment.utc((now - (2 * 60 * 60)) * 1000).format('YYYYMMDDHHmm'));
+
+	console.log('last updated\n', lastUpdated);
+	// look at the units for REY. there are some weird things
+	// also check out the avg wind direction. as singe wnw returned a ese avg
+
+	await getObservations({
+		key: 'stid',
+		value: 'REY'//stationIds.join(',')
+	}, lastUpdated, current);
+	console.log('---new last updated---\n', current);
+}
+
+export async function getObservations(stations, start, end) {
   const params = [
 		// {
 		// 	key: 'stid',
@@ -68,7 +102,7 @@ export async function getObservations(station, start, end) {
 			value: Config.OBSERVATION_TOKEN
 		}
 	];
-  params.push(station);
+  params.push(stations);
   // const url = `https://api.weather.gov/stations/${station}/observations?start=${start}&end=${end}`;
   // const url = `https://api.synopticdata.com/v2/stations/timeseries?state=ut&recent=120&token=${publicKey}`;
   const baseUrl = 'https://api.synopticdata.com/v2/stations/timeseries?';
