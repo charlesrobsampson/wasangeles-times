@@ -14,6 +14,8 @@ import { DynamoDB } from "aws-sdk";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 
+const minsbetween = 30;
+
 const slcStations = [
   'PC064', 'COOPATAU1', 'ATB',
   'CLN',   'AGD',       'AMB',
@@ -87,22 +89,6 @@ export async function getWeather() {
     await Promise.map(times, async (time) => {
       const reading = _.get(readings, time);
       const hrmin = moment.utc(time).format('HH:mm');
-      // console.log({
-      //   TableName: process.env.readingsTableName,
-      //   Item: {
-      //     day: moment.utc(time).format('YYYY-MM-DD'),
-      //     sk: `${region}#${hrmin}`,
-      //     station: id,
-      //     timestamp: time,
-      //     reading
-      //   }
-      //   // region,
-      //   // id,
-      //   // time,
-      //   // day: moment.utc(time).format('YYYY-MM-DD'),
-      //   // minute: moment.utc(time).format('HH:mm'),
-      //   // reading
-      // });
       await dynamoDb.put({
         TableName: process.env.readingsTableName,
         Item: {
@@ -198,7 +184,12 @@ function formatPast(data) {
 		const to = moment(_.last(times)).unix();
 		const diffSecs = to - from;
 		let totals = {};
+    let interval = {};
+    let lastTime = 0;
     for (let i = 0; i < times.length; i++) {
+      // get time diff from last reading
+      // average all readings within the interval
+      // only submit the average over the min interval
       _.forEach(reads, (readings, name) => {
 				const snsr = nameToSensor[name];
         const unit = _.get(units, snsr);

@@ -73,7 +73,7 @@ export function stack({ stack }) {
         environment: { avyTableName: avy.tableName }
       }
     },
-    enabled: false
+    enabled: true
   });
   new Cron(stack, "updateWeatherStations", {
     // schedule: "rate(1 minute)", // for testing
