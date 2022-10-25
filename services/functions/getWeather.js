@@ -39,6 +39,10 @@ const desiredFields = [
   'cloudLayers'
 ];
 
+const excludeStations = [
+  'E7377'
+];
+
 export const main = handler(async (event, context) => {
   // Get stations for each region
   // get time this was last run
@@ -55,8 +59,12 @@ export async function getWeather() {
 	}).promise(), 'Items');
 	// console.log('---stations---');
 	// console.dir(stations, { depth: null });
-	const stationIds = _.map(stations, (station) => {
-		return _.get(station, 'stationId');
+	let stationIds = [] ;
+  _.forEach(stations, (station) => {
+    const id = _.get(station, 'stationId');
+    if (!_.includes(excludeStations, id)) {
+      return stationIds.push(id);
+    }
 	});
 	// console.log('---ids---\n', stationIds);
 	const now = moment.utc().unix();
@@ -91,10 +99,10 @@ export async function getWeather() {
       //   TableName: process.env.readingsTableName,
       //   Item: {
       //     day: moment.utc(time).format('YYYY-MM-DD'),
-      //     sk: `${region}#${hrmin}`,
+      //     sk: `${region}#${hrmin}#${id}`,
       //     station: id,
-      //     timestamp: time,
-      //     reading
+      //     timestamp: time
+      //     // reading
       //   }
       //   // region,
       //   // id,
@@ -107,14 +115,14 @@ export async function getWeather() {
         TableName: process.env.readingsTableName,
         Item: {
           day: moment.utc(time).format('YYYY-MM-DD'),
-          sk: `${region}#${hrmin}`,
+          sk: `${region}#${hrmin}#${id}`,
           station: id,
           timestamp: time,
           reading
         }
       }).promise();
-    }, { concurrency: 10 });
-  }, { concurrency: 10 });
+    }, { concurrency: 1 });
+  }, { concurrency: 1 });
   await dynamoDb.put({
     TableName: process.env.readingsTableName,
     Item: {

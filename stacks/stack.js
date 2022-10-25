@@ -44,6 +44,7 @@ export function stack({ stack }) {
     routes: {
       'GET /': {
 				function: {
+          timeout: '30 seconds',
 					handler: 'functions/dash.main',
 					permissions: [
             avy,
@@ -80,6 +81,7 @@ export function stack({ stack }) {
 		schedule: 'cron(0 0 ? 10-6 SUN *)',// every Sunday at midnight utc oct - june
     job: {
       function: {
+        timeout: '30 seconds',
         handler: "functions/updateWeatherStations.main",
         permissions: [stations],
         environment: { stationsTableName: stations.tableName }
